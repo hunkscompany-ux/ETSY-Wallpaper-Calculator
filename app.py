@@ -1,10 +1,6 @@
 import streamlit as st
-
-
-# =========================
-# AMHUNKUS-ETSY
-# Wallpaper Calculator
-# =========================
+import requests
+import math
 
 
 st.set_page_config(
@@ -14,202 +10,232 @@ st.set_page_config(
 
 
 st.title("AMHUNKUS-ETSY")
-st.subheader("Etsy Wallpaper Cost Calculator")
 
 
-# 材料数据库
+st.write(
+    "Etsy壁纸成本计算系统"
+)
 
-materials = {
 
-    "Peel & Stick Vinyl":{
-        "price":5.5,
-        "weight":0.23
-    },
+# ======================
+# 获取实时汇率
+# ======================
 
-    "Non-Woven":{
-        "price":3,
-        "weight":0.25
-    },
+def get_exchange_rate():
 
-    "Canvas":{
-        "price":5,
-        "weight":0.30
-    },
+    try:
 
-    "Velvet Texture":{
-        "price":3.5,
-        "weight":0.31
-    },
+        url="https://api.exchangerate-api.com/v4/latest/USD"
 
-    "3D Embossed Texture":{
-        "price":12,
-        "weight":0.39
-    }
+        data=requests.get(url).json()
+
+        return data["rates"]["CNY"]
+
+    except:
+
+        return 7.2
+
+
+
+rate=get_exchange_rate()
+
+
+
+# ======================
+# 材料
+# ======================
+
+materials={
+
+"Peel & Stick Vinyl":
+(5.5,0.23),
+
+"Non-Woven":
+(3,0.25),
+
+"Canvas":
+(5,0.30),
+
+"Velvet Texture":
+(3.5,0.31),
+
+"3D Embossed Texture":
+(12,0.39)
 
 }
 
 
 
-material = st.selectbox(
-    "Select Wallpaper Material",
-    list(materials.keys())
+material=st.selectbox(
+"选择壁纸材料",
+materials.keys()
 )
 
 
 
-width = st.number_input(
-    "Wallpaper Width (inch)",
-    min_value=1.0,
-    value=120.0
+width=st.number_input(
+"壁纸宽度(inch)",
+100
 )
 
 
-height = st.number_input(
-    "Wallpaper Height (inch)",
-    min_value=1.0,
-    value=96.0
-)
-
-
-
-exchange_rate = st.number_input(
-    "USD to CNY Exchange Rate",
-    value=7.2
+height=st.number_input(
+"壁纸高度(inch)",
+96
 )
 
 
 
-profit_ratio = st.number_input(
-    "Profit Ratio",
-    value=1.2
+profit=st.number_input(
+"壁纸利润倍率",
+1.2
 )
 
 
 
-if st.button("Calculate"):
-
-
-    # inch -> meter
-
-    width_m = width*0.0254
-
-    height_m = height*0.0254
-
-
-    area = width_m*height_m
+st.info(
+f"当前美元汇率：1 USD = {rate:.2f} CNY"
+)
 
 
 
-    material_price = materials[material]["price"]
+if st.button("开始计算"):
 
 
-    #采购成本
+    price,weight=materials[material]
 
-    purchase_cost = (
-        area *
-        material_price *
-        exchange_rate
+
+    # 面积
+
+    area=(
+        width*0.0254
+        *
+        height*0.0254
     )
 
 
+    #采购
 
-    #重量
+    purchase_cny=(
+        area*
+        price*
+        rate
+    )
 
-    weight = (
-        area/3.5*0.4
-        +0.7
+
+    #壁纸重量
+
+    wallpaper_weight=math.ceil(
+        area*weight
+    )
+
+
+    #包装重量
+
+    package_num=math.ceil(
+        area/3.5
+    )
+
+
+    package_weight=(
+        package_num*0.4+0.7
+    )
+
+
+    total_weight=(
+        wallpaper_weight+
+        package_weight
     )
 
 
     #物流
 
-    shipping_cost = (
-        weight*120+50
+    shipping_cny=(
+        total_weight*120+50
     )
-
 
 
     #成本售价
 
-    cost_price = (
-        purchase_cost
+    cost_price=(
+
+        purchase_cny
         +
-        shipping_cost
+        shipping_cny
         +
         100
+
     )/0.6
 
 
 
     #建议售价
 
-    recommended_price = (
+    selling_price=(
+        cost_price*
+        profit
+    )
+
+
+    st.divider()
+
+
+    st.subheader("壁纸信息")
+
+
+    st.write(
+        f"面积：{area:.2f} ㎡"
+    )
+
+    st.write(
+        f"壁纸重量：{wallpaper_weight} KG"
+    )
+
+    st.write(
+        f"包装重量：{package_weight:.1f} KG"
+    )
+
+    st.write(
+        f"总重量：{total_weight:.1f} KG"
+    )
+
+
+    st.divider()
+
+
+    def show_price(name,cny):
+
+        st.subheader(name)
+
+        st.write(
+            f"人民币：¥{cny:.2f}"
+        )
+
+        st.write(
+            f"美元：${cny/rate:.2f}"
+        )
+
+
+
+    show_price(
+        "采购价格",
+        purchase_cny
+    )
+
+
+    show_price(
+        "快递价格",
+        shipping_cny
+    )
+
+
+    show_price(
+        "成本售价",
         cost_price
-        *
-        profit_ratio
     )
 
 
-
-    st.divider()
-
-
-    st.write(
-        f"Wallpaper Area: **{area:.2f}㎡**"
-    )
-
-
-    st.write(
-        f"Total Weight: **{weight:.2f} KG**"
-    )
-
-
-    st.divider()
-
-
-    st.subheader("Purchase Cost")
-
-    st.write(
-        f"¥{purchase_cost:.2f}"
-    )
-
-    st.write(
-        f"${purchase_cost/exchange_rate:.2f}"
-    )
-
-
-
-    st.subheader("Shipping Cost")
-
-    st.write(
-        f"¥{shipping_cost:.2f}"
-    )
-
-    st.write(
-        f"${shipping_cost/exchange_rate:.2f}"
-    )
-
-
-
-    st.subheader("Cost Selling Price")
-
-    st.write(
-        f"¥{cost_price:.2f}"
-    )
-
-    st.write(
-        f"${cost_price/exchange_rate:.2f}"
-    )
-
-
-
-    st.subheader("Recommended Etsy Price")
-
-    st.success(
-        f"¥{recommended_price:.2f}"
-    )
-
-
-    st.success(
-        f"${recommended_price/exchange_rate:.2f}"
+    show_price(
+        "建议售价",
+        selling_price
     )
