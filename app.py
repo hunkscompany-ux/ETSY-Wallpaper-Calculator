@@ -27,15 +27,16 @@ def get_exchange_rate():
 
         url = "https://api.exchangerate-api.com/v4/latest/USD"
 
-        response = requests.get(url, timeout=10)
+        response = requests.get(
+            url,
+            timeout=10
+        )
 
         data = response.json()
 
         return data["rates"]["CNY"]
 
     except:
-
-        # 获取失败备用汇率
 
         return 7.2
 
@@ -47,13 +48,11 @@ exchange_rate = get_exchange_rate()
 
 # ==============================
 # 材料数据库
-# 单位:
 # price USD / ㎡
 # weight KG / ㎡
 # ==============================
 
 materials = {
-
 
     "Peel & Stick Vinyl":
     {
@@ -61,13 +60,11 @@ materials = {
         "weight":0.23
     },
 
-
     "Non-Woven":
     {
         "price":3,
         "weight":0.25
     },
-
 
     "Canvas":
     {
@@ -75,13 +72,11 @@ materials = {
         "weight":0.30
     },
 
-
     "Velvet Texture":
     {
         "price":3.5,
         "weight":0.31
     },
-
 
     "3D Embossed Texture":
     {
@@ -104,9 +99,8 @@ left,right = st.columns(
 
 
 # ==============================
-# 左侧 输入区域
+# 左侧 输入
 # ==============================
-
 
 with left:
 
@@ -147,10 +141,40 @@ with left:
     )
 
 
+    st.divider()
+
+
+    st.subheader("包装尺寸")
+
+
+    package_length = st.number_input(
+        "包装长度（cm）",
+        min_value=1.0,
+        value=100.0,
+        step=1.0
+    )
+
+
+    package_width = st.number_input(
+        "包装宽度（cm）",
+        min_value=1.0,
+        value=12.0,
+        step=1.0
+    )
+
+
+    package_height = st.number_input(
+        "包装高度（cm）",
+        min_value=1.0,
+        value=12.0,
+        step=1.0
+    )
+
+
+
     st.info(
         f"当前汇率：1 USD = {exchange_rate:.2f} CNY"
     )
-
 
 
     calculate = st.button(
@@ -161,9 +185,8 @@ with left:
 
 
 # ==============================
-# 右侧 结果区域
+# 右侧 输出
 # ==============================
-
 
 with right:
 
@@ -174,18 +197,19 @@ with right:
     if calculate:
 
 
-        material_info = materials[material]
+        material_data = materials[material]
 
 
-        material_price = material_info["price"]
+        material_price = material_data["price"]
 
-        material_weight = material_info["weight"]
+        material_weight = material_data["weight"]
 
 
 
-        # ----------------------
+        # ======================
         # 面积计算
-        # ----------------------
+        # ======================
+
 
         width_m = width * 0.0254
 
@@ -195,15 +219,16 @@ with right:
         area = width_m * height_m
 
 
-        # 平米数向上取整
+        # 面积向上取整
 
         billing_area = math.ceil(area)
 
 
 
-        # ----------------------
-        # 采购价格
-        # ----------------------
+        # ======================
+        # 采购成本
+        # ======================
+
 
         purchase_cny = (
 
@@ -232,9 +257,10 @@ with right:
 
 
 
-        # ----------------------
+        # ======================
         # 壁纸重量
-        # ----------------------
+        # ======================
+
 
         wallpaper_weight = round(
 
@@ -250,11 +276,12 @@ with right:
 
 
 
-        # ----------------------
+        # ======================
         # 包装重量
-        # ----------------------
+        # ======================
 
-        package_count = math.ceil(
+
+        package_number = math.ceil(
 
             billing_area / 3.5
 
@@ -263,7 +290,11 @@ with right:
 
         package_weight = round(
 
-            package_count * 0.4 + 0.7,
+            package_number * 0.4
+
+            +
+
+            0.7,
 
             1
 
@@ -271,11 +302,12 @@ with right:
 
 
 
-        # ----------------------
-        # 总重量
-        # ----------------------
+        # ======================
+        # 实际重量
+        # ======================
 
-        total_weight = round(
+
+        actual_weight = round(
 
             wallpaper_weight
 
@@ -289,13 +321,56 @@ with right:
 
 
 
-        # ----------------------
+        # ======================
+        # 材积重量
+        # ======================
+
+
+        volume_weight = round(
+
+            package_length
+
+            *
+
+            package_width
+
+            *
+
+            package_height
+
+            /
+
+            8000,
+
+            1
+
+        )
+
+
+
+        # ======================
+        # 最终计费重量
+        # ======================
+
+
+        charge_weight = max(
+
+            actual_weight,
+
+            volume_weight
+
+        )
+
+
+
+        # ======================
         # 快递费用
-        # ----------------------
+        # ======================
+
 
         shipping_cny = (
 
-            total_weight
+            charge_weight
 
             *
 
@@ -320,9 +395,10 @@ with right:
 
 
 
-        # ----------------------
+        # ======================
         # 成本售价
-        # ----------------------
+        # ======================
+
 
         cost_price_cny = (
 
@@ -352,9 +428,10 @@ with right:
 
 
 
-        # ----------------------
+        # ======================
         # 建议售价
-        # ----------------------
+        # ======================
+
 
         selling_price_cny = (
 
@@ -380,42 +457,40 @@ with right:
 
 
         # ======================
-        # 显示结果
+        # 页面显示
         # ======================
 
 
         st.divider()
 
 
-        # 基础信息
-
         st.subheader("壁纸信息")
 
 
-        info1,info2,info3,info4 = st.columns(4)
+        c1,c2,c3,c4 = st.columns(4)
 
 
-        info1.metric(
+        c1.metric(
             "实际面积",
             f"{area:.2f}㎡"
         )
 
 
-        info2.metric(
+        c2.metric(
             "计费面积",
             f"{billing_area}㎡"
         )
 
 
-        info3.metric(
+        c3.metric(
             "壁纸重量",
-            f"{wallpaper_weight}KG"
+            f"{wallpaper_weight} KG"
         )
 
 
-        info4.metric(
-            "总重量",
-            f"{total_weight}KG"
+        c4.metric(
+            "最终计费重量",
+            f"{charge_weight} KG"
         )
 
 
@@ -423,17 +498,48 @@ with right:
         st.divider()
 
 
+        st.subheader("重量分析")
 
-        # 成本区域
+
+        w1,w2,w3,w4 = st.columns(4)
+
+
+        w1.metric(
+            "壁纸重量",
+            f"{wallpaper_weight} KG"
+        )
+
+
+        w2.metric(
+            "包装重量",
+            f"{package_weight} KG"
+        )
+
+
+        w3.metric(
+            "实际重量",
+            f"{actual_weight} KG"
+        )
+
+
+        w4.metric(
+            "材积重量",
+            f"{volume_weight} KG"
+        )
+
+
+
+        st.divider()
+
 
         st.subheader("成本分析")
 
 
-        col1,col2 = st.columns(2)
+        a,b = st.columns(2)
 
 
 
-        with col1:
+        with a:
 
 
             st.write("### 采购价格")
@@ -472,7 +578,7 @@ ${shipping_usd:,.2f}
 
 
 
-        with col2:
+        with b:
 
 
             st.write("### 成本售价")
