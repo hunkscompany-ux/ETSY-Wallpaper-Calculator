@@ -73,15 +73,17 @@ materials.keys()
 
 
 
-width=st.number_input(
-"壁纸宽度(inch)",
-100
+width = st.number_input(
+    "壁纸宽度(inch)",
+    min_value=1.0,
+    value=120.0
 )
 
 
-height=st.number_input(
-"壁纸高度(inch)",
-96
+height = st.number_input(
+    "壁纸高度(inch)",
+    min_value=1.0,
+    value=96.0
 )
 
 
