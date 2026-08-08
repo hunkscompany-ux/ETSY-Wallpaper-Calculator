@@ -126,14 +126,21 @@ if st.button("开始计算"):
 
 
     #壁纸重量
-
-    wallpaper_weight=math.ceil(
-        area*weight
+    #壁纸面积向上取整数
+    calculate_area = math.ceil(area)
+    
+    # 壁纸重量
+    wallpaper_weight = (
+        calculate_area * weight
+    )
+    
+    # 保留1位小数
+    wallpaper_weight = round(
+        wallpaper_weight,
+        1
     )
 
-
     #包装重量
-
     package_num=math.ceil(
         area/3.5
     )
