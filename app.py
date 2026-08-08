@@ -117,10 +117,19 @@ if st.button("开始计算"):
 
 
     #采购
-
-    purchase_cny=(
-        area*
-        price*
+    # 壁纸面积向上取整数
+    calculate_area = math.ceil(area)
+    
+    # 采购价格人民币
+    purchase_cny = (
+        calculate_area *
+        price *
+        rate
+    )
+    
+    # 美元
+    purchase_usd = (
+        purchase_cny /
         rate
     )
 
