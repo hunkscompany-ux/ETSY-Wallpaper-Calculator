@@ -4,24 +4,23 @@ import math
 import pandas as pd
 
 
-# =================================
+# ==================================
 # 页面设置
-# =================================
+# ==================================
 
 st.set_page_config(
     page_title="AMHUNKUS-ETSY",
     layout="wide"
 )
 
-
 st.title("AMHUNKUS-ETSY")
-st.caption("Etsy壁纸成本计算系统 V2.4")
+st.caption("Etsy壁纸成本计算系统 V2.5")
 
 
 
-# =================================
-# 获取实时汇率
-# =================================
+# ==================================
+# 获取汇率
+# ==================================
 
 def get_exchange_rate():
 
@@ -34,7 +33,7 @@ def get_exchange_rate():
             timeout=10
         )
 
-        data = response.json()
+        data=response.json()
 
         return data["rates"]["CNY"]
 
@@ -44,17 +43,16 @@ def get_exchange_rate():
 
 
 
-exchange_rate = get_exchange_rate()
+exchange_rate=get_exchange_rate()
 
 
 
-# =================================
-# 壁纸材料数据库
-# price USD /㎡
-# weight KG /㎡
-# =================================
+# ==================================
+# 材料数据
+# ==================================
 
-materials = {
+materials={
+
 
     "Peel & Stick Vinyl":
     {
@@ -94,19 +92,77 @@ materials = {
 
 
 
-# =================================
-# 自动匹配包装尺寸
-# =================================
+# ==================================
+# 美国常用尺寸
+# ==================================
+
+default_sizes=[
+
+    ("48W × 48H",48,48),
+
+    ("48W × 96H",48,96),
+
+    ("72W × 96H",72,96),
+
+    ("96W × 96H",96,96),
+
+    ("120W × 96H",120,96),
+
+    ("144W × 96H",144,96),
+
+    ("168W × 96H",168,96),
+
+    ("192W × 108H",192,108),
+
+    ("240W × 120H",240,120)
+
+]
+
+
+
+# ==================================
+# 获取计算尺寸
+# ==================================
+
+def get_sizes(width,height):
+
+
+    if width and height:
+
+
+        return [
+
+            (
+                f"{int(width)}W × {int(height)}H",
+                width,
+                height
+            )
+
+        ]
+
+
+    else:
+
+
+        return default_sizes
+
+
+
+
+
+# ==================================
+# 自动包装尺寸
+# ==================================
 
 def get_package_size(package_number):
 
 
-    if package_number == 1:
+    if package_number==1:
 
         return 50,15,15
 
 
-    elif package_number == 2:
+    elif package_number==2:
 
         return 50,30,15
 
@@ -123,19 +179,20 @@ def get_package_size(package_number):
 
 
 
-# =================================
-# 左右布局
-# =================================
 
-left,right = st.columns(
-    [1,1.8]
+# ==================================
+# 页面布局
+# ==================================
+
+left,right=st.columns(
+    [1,2]
 )
 
 
 
-# =================================
+# ==================================
 # 左侧输入
-# =================================
+# ==================================
 
 with left:
 
@@ -143,39 +200,36 @@ with left:
     st.subheader("参数设置")
 
 
-    width = st.number_input(
+
+    width=st.number_input(
 
         "壁纸宽度（inch）",
 
-        min_value=1.0,
+        min_value=0.0,
 
-        max_value=1000.0,
+        value=None,
 
-        value=120.0,
-
-        step=1.0
+        placeholder="留空自动计算"
 
     )
 
 
 
-    height = st.number_input(
+    height=st.number_input(
 
         "壁纸高度（inch）",
 
-        min_value=1.0,
+        min_value=0.0,
 
-        max_value=1000.0,
+        value=None,
 
-        value=96.0,
-
-        step=1.0
+        placeholder="留空自动计算"
 
     )
 
 
 
-    profit_ratio = st.number_input(
+    profit_ratio=st.number_input(
 
         "壁纸利润倍率",
 
@@ -194,15 +248,20 @@ with left:
     st.divider()
 
 
+
     st.info(
 
-        f"当前汇率：1 USD = {exchange_rate:.2f} CNY"
+        f"""
+当前汇率：
 
+1 USD = {exchange_rate:.2f} CNY
+
+"""
     )
 
 
 
-    calculate = st.button(
+    calculate=st.button(
 
         "开始计算",
 
@@ -212,9 +271,11 @@ with left:
 
 
 
-# =================================
-# 右侧结果
-# =================================
+
+
+# ==================================
+# 右侧输出
+# ==================================
 
 with right:
 
@@ -226,228 +287,98 @@ with right:
     if calculate:
 
 
-        # -----------------------------
-        # 面积计算
-        # -----------------------------
-
-
-        width_m = width * 0.0254
-
-        height_m = height * 0.0254
-
-
-        area = width_m * height_m
-
-
-        # 计费面积
-
-        billing_area = math.ceil(area)
-
-
-
-        # -----------------------------
-        # 包装数量
-        # -----------------------------
-
-
-        package_number = math.ceil(
-
-            billing_area / 3.5
-
+        sizes=get_sizes(
+            width,
+            height
         )
 
-
-
-        # 自动包装尺寸
-
-
-        package_length,package_width,package_height = get_package_size(
-
-            package_number
-
-        )
-
-
-
-        # -----------------------------
-        # 包装重量
-        # -----------------------------
-
-
-        package_weight = round(
-
-            package_number * 0.4 + 0.7,
-
-            1
-
-        )
-
-
-
-        # -----------------------------
-        # 材积重量
-        # -----------------------------
-
-
-        volume_weight = round(
-
-            package_length
-
-            *
-
-            package_width
-
-            *
-
-            package_height
-
-            /
-
-            8000,
-
-            1
-
-        )
-
-
-
-        st.divider()
-
-
-        st.subheader("基础信息")
-
-
-
-        a,b,c,d = st.columns(4)
-
-
-        a.metric(
-
-            "实际面积",
-
-            f"{area:.2f}㎡"
-
-        )
-
-
-        b.metric(
-
-            "计费面积",
-
-            f"{billing_area}㎡"
-
-        )
-
-
-        c.metric(
-
-            "包装数量",
-
-            f"{package_number}卷"
-
-        )
-
-
-        d.metric(
-
-            "包装尺寸",
-
-            f"{package_length}×{package_width}×{package_height}cm"
-
-        )
-
-
-
-        st.divider()
-
-
-
-        st.subheader("重量分析")
-
-
-
-        w1,w2,w3 = st.columns(3)
-
-
-        w1.metric(
-
-            "包装重量",
-
-            f"{package_weight} KG"
-
-        )
-
-
-        w2.metric(
-
-            "材积重量",
-
-            f"{volume_weight} KG"
-
-        )
-
-
-
-        st.divider()
-
-
-
-        # ============================
-        # 五种材料计算
-        # ============================
 
 
         results=[]
 
 
 
-        for name,data in materials.items():
-
-
-            material_price = data["price"]
-
-            material_weight = data["weight"]
+        size_info=[]
 
 
 
-            # 采购价格
+        for size_name,w,h in sizes:
 
-            purchase_cny = (
 
-                billing_area
 
-                *
+            # ==========================
+            # 面积
+            # ==========================
 
-                material_price
 
-                *
+            width_m=w*0.0254
 
-                exchange_rate
+            height_m=h*0.0254
+
+
+            area=width_m*height_m
+
+
+            billing_area=math.ceil(area)
+
+
+
+            # ==========================
+            # 包装数量
+            # ==========================
+
+
+            package_number=math.ceil(
+
+                billing_area/3.5
 
             )
 
 
-            purchase_usd = (
 
-                purchase_cny
+            package_length,package_width,package_height=get_package_size(
+
+                package_number
+
+            )
+
+
+
+            # ==========================
+            # 包装重量
+            # ==========================
+
+
+            package_weight=round(
+
+                package_number*0.4+0.7,
+
+                1
+
+            )
+
+
+
+            # ==========================
+            # 材积重量
+            # ==========================
+
+
+            volume_weight=round(
+
+                package_length
+
+                *
+
+                package_width
+
+                *
+
+                package_height
 
                 /
 
-                exchange_rate
-
-            )
-
-
-
-            # 壁纸重量
-
-            wallpaper_weight = round(
-
-                billing_area
-
-                *
-
-                material_weight,
+                8000,
 
                 1
 
@@ -455,144 +386,287 @@ with right:
 
 
 
-            # 实际重量
+            size_info.append({
 
-            actual_weight = round(
+                "尺寸":size_name,
 
-                wallpaper_weight
+                "面积㎡":billing_area,
 
-                +
+                "包装尺寸":
 
-                package_weight,
+                f"{package_length}×{package_width}×{package_height}",
 
-                1
-
-            )
-
-
-
-            # 最终计费重量
-
-            charge_weight=max(
-
-                actual_weight,
+                "材积重量KG":
 
                 volume_weight
-
-            )
-
-
-
-            # 快递费用
-
-            shipping_cny=(
-
-                charge_weight
-
-                *
-
-                120
-
-                +
-
-                50
-
-            )
-
-
-            shipping_usd=(
-
-                shipping_cny
-
-                /
-
-                exchange_rate
-
-            )
-
-
-
-            # 成本售价
-
-            cost_price_cny=(
-
-                purchase_cny
-
-                +
-
-                shipping_cny
-
-                +
-
-                100
-
-            ) / 0.6
-
-
-
-            cost_price_usd=(
-
-                cost_price_cny
-
-                /
-
-                exchange_rate
-
-            )
-
-
-
-            # 建议售价
-
-            selling_price_cny=(
-
-                cost_price_cny
-
-                *
-
-                profit_ratio
-
-            )
-
-
-
-            selling_price_usd=(
-
-                selling_price_cny
-
-                /
-
-                exchange_rate
-
-            )
-
-
-
-            results.append({
-
-                "材料":name,
-
-                "采购价格(RMB)":round(purchase_cny,2),
-
-                "采购价格(USD)":round(purchase_usd,2),
-
-                "快递价格(RMB)":round(shipping_cny,2),
-
-                "成本售价(RMB)":round(cost_price_cny,2),
-
-                "成本售价(USD)":round(cost_price_usd,2),
-
-                "建议售价(RMB)":round(selling_price_cny,2),
-
-                "建议售价(USD)":round(selling_price_usd,2)
 
             })
 
 
 
-        # ============================
-        # 展示表格
-        # ============================
+
+            # ==========================
+            # 五种材料计算
+            # ==========================
+
+
+            for name,data in materials.items():
+
+
+                material_price=data["price"]
+
+                material_weight=data["weight"]
+
+
+
+                #采购价格
+
+
+                purchase_cny=(
+
+                    billing_area
+
+                    *
+
+                    material_price
+
+                    *
+
+                    exchange_rate
+
+                )
+
+
+
+                purchase_usd=(
+
+                    purchase_cny
+
+                    /
+
+                    exchange_rate
+
+                )
+
+
+
+
+                #壁纸重量
+
+
+                wallpaper_weight=round(
+
+                    billing_area
+
+                    *
+
+                    material_weight,
+
+                    1
+
+                )
+
+
+
+                #实际重量
+
+
+                actual_weight=round(
+
+                    wallpaper_weight
+
+                    +
+
+                    package_weight,
+
+                    1
+
+                )
+
+
+
+                #最终计费重量
+
+
+                charge_weight=max(
+
+                    actual_weight,
+
+                    volume_weight
+
+                )
+
+
+
+                #物流
+
+
+                shipping_cny=(
+
+                    charge_weight
+
+                    *
+
+                    120
+
+                    +
+
+                    50
+
+                )
+
+
+
+                shipping_usd=(
+
+                    shipping_cny
+
+                    /
+
+                    exchange_rate
+
+                )
+
+
+
+                #成本售价
+
+
+                cost_cny=(
+
+                    purchase_cny
+
+                    +
+
+                    shipping_cny
+
+                    +
+
+                    100
+
+                )/0.6
+
+
+
+                cost_usd=(
+
+                    cost_cny
+
+                    /
+
+                    exchange_rate
+
+                )
+
+
+
+                #建议售价
+
+
+                sale_cny=(
+
+                    cost_cny
+
+                    *
+
+                    profit_ratio
+
+                )
+
+
+                sale_usd=(
+
+                    sale_cny
+
+                    /
+
+                    exchange_rate
+
+                )
+
+
+
+                results.append({
+
+
+                    "尺寸":size_name,
+
+
+                    "材料":name,
+
+
+                    "计费面积㎡":billing_area,
+
+
+                    "采购价格人民币":
+
+                    round(purchase_cny,2),
+
+
+                    "采购价格美元":
+
+                    round(purchase_usd,2),
+
+
+                    "快递人民币":
+
+                    round(shipping_cny,2),
+
+
+                    "成本售价人民币":
+
+                    round(cost_cny,2),
+
+
+                    "成本售价美元":
+
+                    round(cost_usd,2),
+
+
+                    "建议售价人民币":
+
+                    round(sale_cny,2),
+
+
+                    "建议售价美元":
+
+                    round(sale_usd,2)
+
+
+                })
+
+
+
+
+
+        # ==========================
+        # 显示尺寸信息
+        # ==========================
+
+
+        st.divider()
+
+        st.subheader("尺寸与包装信息")
+
+
+        df_size=pd.DataFrame(size_info)
+
+
+        st.dataframe(
+
+            df_size,
+
+            use_container_width=True,
+
+            hide_index=True
+
+        )
+
+
+
+        # ==========================
+        # 显示报价
+        # ==========================
 
 
         st.divider()
@@ -601,8 +675,7 @@ with right:
         st.subheader("五种材料报价")
 
 
-        df = pd.DataFrame(results)
-
+        df=pd.DataFrame(results)
 
 
         st.dataframe(
