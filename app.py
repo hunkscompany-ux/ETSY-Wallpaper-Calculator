@@ -5,7 +5,7 @@ import pandas as pd
 
 
 # ==================================================
-# 页面设置
+# 页面配置
 # ==================================================
 
 st.set_page_config(
@@ -14,16 +14,23 @@ st.set_page_config(
 )
 
 
-st.title("AMHUNKUS-ETSY")
+# ==================================================
+# 标题
+# ==================================================
 
-st.caption(
-    "Etsy 壁纸成本计算系统 V2.9.4"
+st.markdown(
+    """
+    <h1 style='text-align:center;'>
+    AMHUNKUS-ETSY
+    </h1>
+    """,
+    unsafe_allow_html=True
 )
 
 
 
 # ==================================================
-# 获取实时汇率
+# 汇率获取
 # ==================================================
 
 def get_exchange_rate():
@@ -32,12 +39,14 @@ def get_exchange_rate():
 
         url = "https://api.exchangerate-api.com/v4/latest/USD"
 
-        result = requests.get(
+        response = requests.get(
             url,
             timeout=10
-        ).json()
+        )
 
-        return result["rates"]["CNY"]
+        data = response.json()
+
+        return data["rates"]["CNY"]
 
 
     except:
@@ -59,29 +68,41 @@ materials = {
 
     "Non-Woven":
     {
+
         "price":3,
+
         "weight":0.25
+
     },
 
 
     "Canvas ⭐推荐":
     {
+
         "price":5,
+
         "weight":0.30
+
     },
 
 
     "Velvet Texture":
     {
+
         "price":3.5,
+
         "weight":0.31
+
     },
 
 
     "3D Embossed Texture":
     {
+
         "price":12,
+
         "weight":0.40
+
     }
 
 }
@@ -128,10 +149,14 @@ default_sizes = [
 
 
 # ==================================================
-# 向上保留2位小数
+# 工具函数
 # ==================================================
 
 def ceil_two(value):
+
+    """
+    向上取整，保留2位小数
+    """
 
     return math.ceil(
         value * 100
@@ -140,11 +165,20 @@ def ceil_two(value):
 
 
 
-# ==================================================
-# 获取计算尺寸
-# ==================================================
+
 
 def get_sizes(width,height):
+
+
+    """
+    如果输入尺寸：
+
+    使用输入尺寸
+
+    如果为空：
+
+    使用默认尺寸
+    """
 
 
     if width > 0 and height > 0:
@@ -153,14 +187,16 @@ def get_sizes(width,height):
         return [
 
             {
-                "name":
-                f"{int(width)}W × {int(height)}H",
 
-                "width":
-                width,
+            "name":
+            f"{int(width)}W × {int(height)}H",
 
-                "height":
-                height
+            "width":
+            width,
+
+            "height":
+            height
+
             }
 
         ]
@@ -172,21 +208,25 @@ def get_sizes(width,height):
 
 
 
+
 # ==================================================
-# 最新纸筒数量计算 V2.9.4
+# 纸筒数量计算 V3.0
 #
 # 宽度：
 # 每卷50cm
 #
 # 高度：
-# 每卷最大700cm
+# 最大700cm
 #
 # ==================================================
 
-def calculate_tube_count(width_cm,height_cm):
+def calculate_tube_count(
+    width_cm,
+    height_cm
+):
 
 
-    # 宽度裁切数量
+    # 宽度方向裁切数量
 
     width_parts = math.ceil(
 
@@ -196,7 +236,7 @@ def calculate_tube_count(width_cm,height_cm):
 
 
 
-    # 高度切割
+    # 高度拆分
 
     height_parts = []
 
@@ -230,16 +270,16 @@ def calculate_tube_count(width_cm,height_cm):
 
 
 
-    # 每段高度分别计算
-
     for h in height_parts:
 
+
+        # 当前高度卷数量
 
         roll_count = width_parts
 
 
 
-        # 一个纸筒可装多少卷
+        # 一个纸筒可装数量
 
         capacity = math.floor(
 
@@ -254,7 +294,7 @@ def calculate_tube_count(width_cm,height_cm):
 
 
 
-        tubes = math.ceil(
+        total_tubes += math.ceil(
 
             roll_count /
 
@@ -263,99 +303,72 @@ def calculate_tube_count(width_cm,height_cm):
         )
 
 
-        total_tubes += tubes
-
-
 
     return total_tubes
-
-
-
-
-# ==================================================
-# 根据纸筒数量匹配纸箱
+    # ==================================================
+# 自动纸箱尺寸
 # ==================================================
 
 def get_box_size(tube_count):
 
 
-    if tube_count <=2:
+    if tube_count <= 2:
 
 
-        return (
-            55,
-            20,
-            10
-        )
+        return 55,20,10
+
 
 
     elif tube_count <=4:
 
 
-        return (
-            55,
-            20,
-            20
-        )
+        return 55,20,20
+
 
 
     elif tube_count <=6:
 
 
-        return (
-            55,
-            30,
-            20
-        )
+        return 55,30,20
+
 
 
     elif tube_count <=9:
 
 
-        return (
-            55,
-            30,
-            30
-        )
+        return 55,30,30
+
 
 
     elif tube_count <=12:
 
 
-        return (
-            55,
-            40,
-            30
-        )
+        return 55,40,30
+
 
 
     else:
 
 
-        return (
-            55,
-            40,
-            40
-        )
+        return 55,40,40
 
 
 
 
 
 # ==================================================
-# 页面布局
+# 页面顶部布局
 # ==================================================
 
 left,right = st.columns(
-    [1,2]
+    [1,1]
 )
 
 
 
 
-
 # ==================================================
-# 左侧参数
+# 左侧 参数设置
 # ==================================================
 
 with left:
@@ -366,7 +379,8 @@ with left:
     )
 
 
-    width = st.number_input(
+
+    wallpaper_width = st.number_input(
 
         "壁纸宽度（inch）",
 
@@ -380,7 +394,7 @@ with left:
 
 
 
-    height = st.number_input(
+    wallpaper_height = st.number_input(
 
         "壁纸高度（inch）",
 
@@ -391,6 +405,62 @@ with left:
         step=1.0
 
     )
+
+
+
+    st.divider()
+
+
+
+    st.write(
+        "包装尺寸（可选）"
+    )
+
+
+
+    package_length = st.number_input(
+
+        "包装长度（cm）",
+
+        min_value=0.0,
+
+        value=0.0,
+
+        step=1.0
+
+    )
+
+
+
+    package_width = st.number_input(
+
+        "包装宽度（cm）",
+
+        min_value=0.0,
+
+        value=0.0,
+
+        step=1.0
+
+    )
+
+
+
+    package_height = st.number_input(
+
+        "包装高度（cm）",
+
+        min_value=0.0,
+
+        value=0.0,
+
+        step=1.0
+
+    )
+
+
+
+    st.divider()
 
 
 
@@ -410,22 +480,19 @@ with left:
 
 
 
-    st.divider()
-
-
     st.info(
 
         f"""
 当前汇率：
 
 1 USD = {exchange_rate:.2f} CNY
-"""
 
+"""
     )
 
 
 
-    start = st.button(
+    calculate_button = st.button(
 
         "开始计算",
 
@@ -435,54 +502,173 @@ with left:
 
 
 
+
+
+
 # ==================================================
-# 右侧结果
+# 右侧 计算规则
 # ==================================================
 
 with right:
 
 
     st.subheader(
-        "计算结果"
+
+        "计算规则"
+
     )
+
+
+    st.markdown(
+
+"""
+### 尺寸计算
+
+inch × 2.54 = cm
+
+inch × 0.0254 = m
+
+
+计费面积：
+
+宽(m) × 高(m)
+
+结果向上取整数
+
+
+
+---
+
+
+### 壁纸裁切规则
+
+
+宽度：
+
+50cm / 卷
+
+
+高度：
+
+700cm / 段
+
+
+
+---
+
+
+### 纸筒数量
+
+
+根据裁切后的壁纸卷数量计算。
+
+
+单个纸筒最大：
+
+700cm长度
+
+
+
+---
+
+
+### 重量计算
+
+
+商品重量：
+
+计费面积 × 材料克重
+
+
+包装重量：
+
+纸筒数量 × 0.45 + 0.8
+
+
+实际重量：
+
+商品重量 + 包装重量
+
+
+材积重量：
+
+包装长 × 宽 × 高 ÷ 8000
+
+
+最终计费重量：
+
+实际重量和材积重量取最大值
+
+
+
+---
+
+
+### 价格计算
+
+
+采购价格：
+
+面积 × 材料价格 × 汇率
+
+
+快递：
+
+计费重量 ×120 +50
+
+
+成本售价：
+
+采购价格 + 快递价格
+
+
+建议售价：
+
+成本售价 ÷(0.7-利润倍率)÷汇率
+
+
+"""
+    )
+
+
+
 
 # ==================================================
 # 开始计算
 # ==================================================
 
-if start:
+if calculate_button:
 
 
     sizes = get_sizes(
-        width,
-        height
+
+        wallpaper_width,
+
+        wallpaper_height
+
     )
 
 
-    package_results = []
-
-    material_results = {}
+    package_info = []
 
 
+    material_price_info = {}
 
-    # ==============================================
-    # 循环尺寸
-    # ==============================================
+
 
     for size in sizes:
 
 
         size_name = size["name"]
 
+
         width_inch = size["width"]
+
 
         height_inch = size["height"]
 
 
-
-        # ==========================================
-        # inch 转 cm
-        # ==========================================
+        # inch转cm
 
         width_cm = ceil_two(
 
@@ -503,9 +689,8 @@ if start:
 
 
 
-        # ==========================================
-        # inch 转米
-        # ==========================================
+        # inch转m
+
 
         width_m = ceil_two(
 
@@ -526,9 +711,8 @@ if start:
 
 
 
-        # ==========================================
-        # 计费面积
-        # ==========================================
+        # 面积
+
 
         area = (
 
@@ -547,9 +731,8 @@ if start:
 
 
 
-        # ==========================================
         # 纸筒数量
-        # ==========================================
+
 
         tube_count = calculate_tube_count(
 
@@ -558,28 +741,61 @@ if start:
             height_cm
 
         )
+                # ==================================================
+        # 纸箱尺寸
+        #
+        # 如果用户填写包装尺寸
+        # 优先使用用户输入
+        #
+        # 否则自动匹配
+        # ==================================================
+
+
+        if (
+
+            package_length > 0
+
+            and
+
+            package_width > 0
+
+            and
+
+            package_height > 0
+
+        ):
+
+
+            box_l = package_length
+
+            box_w = package_width
+
+            box_h = package_height
+
+
+        else:
+
+
+            box_l,box_w,box_h = get_box_size(
+
+                tube_count
+
+            )
 
 
 
-        # ==========================================
-        # 箱子尺寸
-        # ==========================================
 
-        box_l,box_w,box_h = get_box_size(
-
-            tube_count
-
-        )
-
-
-
-        # ==========================================
+        # ==================================================
         # 包装重量
         #
-        # 纸筒重量0.45KG
-        # 箱子重量0.8KG
+        # 纸筒：
+        # 0.45KG/个
         #
-        # ==========================================
+        # 箱子：
+        # 0.8KG
+        #
+        # ==================================================
+
 
         package_weight = ceil_two(
 
@@ -595,12 +811,11 @@ if start:
 
 
 
-        # ==========================================
+
+        # ==================================================
         # 材积重量
-        #
-        # 长×宽×高÷8000
-        #
-        # ==========================================
+        # ==================================================
+
 
         volume_weight = ceil_two(
 
@@ -619,26 +834,28 @@ if start:
 
 
 
-        # ==========================================
-        # 不同材料计算
-        # ==========================================
+        # ==================================================
+        # 遍历材料
+        # ==================================================
 
 
-        for material,info in materials.items():
+        for material,data in materials.items():
 
 
-            material_price = info["price"]
-
-            material_weight = info["weight"]
+            material_price = data["price"]
 
 
+            material_weight = data["weight"]
 
-            # ======================================
+
+
+
+            # ==================================================
             # 商品重量
             #
             # 面积 × 克重
-            #
-            # ======================================
+            # ==================================================
+
 
             product_weight = ceil_two(
 
@@ -650,12 +867,10 @@ if start:
 
 
 
-            # ======================================
+            # ==================================================
             # 实际重量
-            #
-            # 商品重量+包装重量
-            #
-            # ======================================
+            # ==================================================
+
 
             actual_weight = ceil_two(
 
@@ -669,12 +884,10 @@ if start:
 
 
 
-            # ======================================
+            # ==================================================
             # 最终计费重量
-            #
-            # 实际重量 VS 材积重量
-            #
-            # ======================================
+            # ==================================================
+
 
             billing_weight = ceil_two(
 
@@ -690,19 +903,17 @@ if start:
 
 
 
-            # ======================================
+
+            # ==================================================
             # 采购价格
-            # ======================================
+            # ==================================================
 
-            purchase_price = ceil_two(
 
-                billing_area
+            purchase_price_rmb = ceil_two(
 
-                *
+                billing_area *
 
-                material_price
-
-                *
+                material_price *
 
                 exchange_rate
 
@@ -710,15 +921,15 @@ if start:
 
 
 
-            # ======================================
-            # 快递价格
-            # ======================================
 
-            shipping_price = ceil_two(
+            # ==================================================
+            # 快递费用
+            # ==================================================
 
-                billing_weight
 
-                *
+            shipping_price_rmb = ceil_two(
+
+                billing_weight *
 
                 120
 
@@ -730,29 +941,33 @@ if start:
 
 
 
-            # ======================================
+
+            # ==================================================
             # 成本售价
-            # ======================================
+            # ==================================================
 
-            cost_price = ceil_two(
 
-                purchase_price
+            cost_price_rmb = ceil_two(
+
+                purchase_price_rmb
 
                 +
 
-                shipping_price
+                shipping_price_rmb
 
             )
 
 
 
-            # ======================================
+
+            # ==================================================
             # 建议售价 USD
-            # ======================================
+            # ==================================================
 
-            recommend_price = ceil_two(
 
-                cost_price
+            recommend_price_usd = ceil_two(
+
+                cost_price_rmb
 
                 /
 
@@ -774,11 +989,13 @@ if start:
 
 
 
-            # ======================================
-            # 包装信息
-            # ======================================
 
-            package_results.append({
+            # ==================================================
+            # 尺寸包装信息
+            # ==================================================
+
+
+            package_info.append({
 
 
                 "材料":
@@ -786,9 +1003,11 @@ if start:
                 material,
 
 
+
                 "尺寸":
 
                 size_name,
+
 
 
                 "转换尺寸(cm)":
@@ -854,18 +1073,21 @@ if start:
 
 
 
-            # ======================================
-            # 材料报价
-            # ======================================
+
+            # ==================================================
+            # 材料报价集中保存
+            # ==================================================
 
 
-            if material not in material_results:
-
-                material_results[material] = []
+            if material not in material_price_info:
 
 
+                material_price_info[material] = []
 
-            material_results[material].append({
+
+
+
+            material_price_info[material].append({
 
 
                 "尺寸":
@@ -886,12 +1108,6 @@ if start:
 
 
 
-                "包装重量KG":
-
-                f"{package_weight:.2f}",
-
-
-
                 "实际重量KG":
 
                 f"{actual_weight:.2f}",
@@ -906,30 +1122,31 @@ if start:
 
                 "采购价格(RMB)":
 
-                purchase_price,
+                purchase_price_rmb,
 
 
 
                 "快递价格(RMB)":
 
-                shipping_price,
+                shipping_price_rmb,
 
 
 
                 "成本售价(RMB)":
 
-                cost_price,
+                cost_price_rmb,
 
 
 
                 "建议售价(USD)":
 
-                recommend_price
+                recommend_price_usd
 
             })
-                    # ==========================================
-        # 尺寸与包装信息展示
-        # ==========================================
+
+        # ==================================================
+        # 结果展示
+        # ==================================================
 
         st.divider()
 
@@ -939,11 +1156,13 @@ if start:
         )
 
 
+
         package_df = pd.DataFrame(
 
-            package_results
+            package_info
 
         )
+
 
 
         st.dataframe(
@@ -958,86 +1177,170 @@ if start:
 
 
 
-        # ==========================================
-        # 材料报价展示
-        # ==========================================
+
+        # ==================================================
+        # 材料报价
+        # ==================================================
 
         st.divider()
 
 
+
         st.subheader(
+
             "材料报价"
+
         )
 
 
 
-        for material,result in material_results.items():
+        for material, rows in material_price_info.items():
 
 
-            st.markdown(
+            # Canvas默认展开
 
-                f"### {material}"
-
-            )
+            expanded = False
 
 
+            if "Canvas" in material:
 
-            material_df = pd.DataFrame(
-
-                result
-
-            )
+                expanded = True
 
 
 
-            st.dataframe(
+            with st.expander(
 
-                material_df,
+                material,
 
-                use_container_width=True,
+                expanded=expanded
 
-                hide_index=True
-
-            )
+            ):
 
 
+                df = pd.DataFrame(
 
-        # ==========================================
+                    rows
+
+                )
+
+
+
+                st.dataframe(
+
+                    df,
+
+                    use_container_width=True,
+
+                    hide_index=True
+
+                )
+
+
+
+
+
+        # ==================================================
         # 计算说明
-        # ==========================================
+        # ==================================================
 
         st.divider()
 
 
+
         st.info(
-            """
-计算规则：
 
-1. 商品重量
-= 计费面积㎡ × 材料克重
-
-
-2. 包装重量
-= 纸筒数量 × 0.45KG + 0.8KG
-
-
-3. 实际重量
-= 商品重量 + 包装重量
-
-
-4. 材积重量
-= 纸箱长 × 宽 × 高 ÷ 8000
-
-
-5. 最终计费重量
-= 实际重量 与 材积重量取最大值
-
-
-6. 快递费用
-= 最终计费重量 ×120 +50
-
-
-7. 建议售价USD
-= 成本售价 ÷ (0.7-利润倍率) ÷ 汇率
 """
+AMHUNKUS-ETSY V3.0 计算说明
+
+
+【尺寸】
+
+英寸转换：
+
+inch × 2.54 = cm
+
+inch × 0.0254 = m
+
+
+计费面积：
+
+宽(m) × 高(m)
+
+向上取整数
+
+
+
+【壁纸裁切】
+
+宽度：
+
+每卷50cm
+
+
+高度：
+
+每段最大700cm
+
+
+
+【纸筒】
+
+根据裁切后的壁纸卷数量计算。
+
+
+单个纸筒最大长度700cm。
+
+
+
+【重量】
+
+商品重量：
+
+计费面积㎡ × 材料克重
+
+
+包装重量：
+
+纸筒数量×0.45 + 0.8
+
+
+实际重量：
+
+商品重量+包装重量
+
+
+材积重量：
+
+包装尺寸(cm) 长×宽×高÷8000
+
+
+最终计费重量：
+
+实际重量和材积重量取最大值
+
+
+
+【价格】
+
+采购价格：
+
+计费面积×材料价格×汇率
+
+
+快递：
+
+计费重量×120+50
+
+
+成本：
+
+采购价格+快递
+
+
+建议售价：
+
+成本÷(0.7-利润倍率)÷汇率
+
+"""
+
         )
